@@ -37,63 +37,83 @@ library(lme4)
 #### Load cleaned data #########################################################
 data <- read.csv("data/data-cleaned.csv")
 
-# make things factors
+# make things factors and get rid of index column
 data <- data %>% 
-  mutate(bugType = as.factor(bugtype),
+  select(-X) %>% 
+  mutate(bugType = as.factor(bugType),
          projectName = as.factor(projectName),
          author_after = as.factor(author_after))
 
 
+#### Some basic data exploration ###############################################
+mean(data$number_of_commits_oldest)
+sd(data$number_of_commits_oldest)
+
+# in this case, mean does not equal variance, meaning we should use neg binomial
+# distribution instead of Poisson due to overdispersion 
+
+
+
+#### Modeling ##################################################################
+
 ## Anjini models for reference
-model_beforeAfterEntropiesPred_timeLatencyOutcome = lmer(log(merged_df$latencies) ~ merged_df$after_entropy.entropy + 
-                                                           merged_df$before_entropy.entropy + 
-                                                           ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$projectName) + 
-                                                           ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$bugType) + 
-                                                           ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$bugFilePath),
-                                                         control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
+# model_beforeAfterEntropiesPred_timeLatencyOutcome = lmer(log(merged_df$latencies) ~ merged_df$after_entropy.entropy + 
+#                                                            merged_df$before_entropy.entropy + 
+#                                                            ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$projectName) + 
+#                                                            ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$bugType) + 
+#                                                            ((1+merged_df$after_entropy.entropy + merged_df$before_entropy.entropy ) || merged_df$bugFilePath),
+#                                                          control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
 
-model_oldestAfterEntropiesPred_timeLatencyOutcome = lmer(log(merged_df$latencies) ~ merged_df$after_entropy + 
-                                                           merged_df$oldest_entropy + 
-                                                           ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$projectName) + 
-                                                           ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugType) + 
-                                                           ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugFilePath), 
-                                                         control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
+# model_oldestAfterEntropiesPred_timeLatencyOutcome = lmer(log(merged_df$latencies) ~ merged_df$after_entropy + 
+#                                                            merged_df$oldest_entropy + 
+#                                                            ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$projectName) + 
+#                                                            ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugType) + 
+#                                                            ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugFilePath), 
+#                                                          control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
 
 
-model_beforeAfterEntropiesPred_commitLatencyOutcome = lmer((merged_df$number_of_commits_oldest) ~ merged_df$after_entropy + 
-                                                             merged_df$before_entropy + 
-                                                             ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$projectName) + 
-                                                             ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$bugType) + 
-                                                             ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$bugFilePath), 
-                                                           control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
+# model_beforeAfterEntropiesPred_commitLatencyOutcome = lmer((merged_df$number_of_commits_oldest) ~ merged_df$after_entropy + 
+#                                                              merged_df$before_entropy + 
+#                                                              ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$projectName) + 
+#                                                              ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$bugType) + 
+#                                                              ((1+merged_df$after_entropy + merged_df$before_entropy ) || merged_df$bugFilePath), 
+#                                                            control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
 
-model_oldestAfterEntropiesPred_commitLatencyOutcome = lmer((merged_df$number_of_commits_oldest) ~ merged_df$after_entropy + 
-                                                             merged_df$oldest_entropy + 
-                                                             ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$projectName) + 
-                                                             ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugType) + 
-                                                             ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugFilePath),
-                                                           control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
+# model_oldestAfterEntropiesPred_commitLatencyOutcome = lmer((merged_df$number_of_commits_oldest) ~ merged_df$after_entropy + 
+#                                                              merged_df$oldest_entropy + 
+#                                                              ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$projectName) + 
+#                                                              ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugType) + 
+#                                                              ((1+merged_df$after_entropy + merged_df$oldest_entropy ) || merged_df$bugFilePath),
+#                                                            control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
 
 
 ## simplified so I can actually read them
 model_beforeAfterEntropiesPred_timeLatencyOutcome = lmer(log(latencies) ~ after_entropy.entropy + before_entropy.entropy + 
-                                                           (1 + projectName) + 
-                                                           (1 + bugType) + 
-                                                           (1 + bugFilePath),
+                                                           (1 | projectName) + 
+                                                           (1 | bugType) + 
+                                                           (1 | bugFilePath),
                                                          data = merged_df,
                                                          control=lmerControl(optimizer="bobyqa", optCtrl=list(maxfun=50000)))
+
+
 
 
 ## probably need random intercepts by author, and also random intercepts by whether it was the same author given previous research
 ## why do we need random intercepts by bugFilePath? Kevin agrees to remove
 ## what about bug node length or fix node length?
 
+# set sum coding
+options(contrasts = c("contr.sum", "contr.sum"))
 
-
-#### DATA VISUALIZATION ########################################################
-
-# +- 2.5 sds cutoff
-smaller <- data %>% 
-  filter(number_of_commits_oldest <= (sd(number_of_commits_oldest) * 2.5))
-
-## TODO: write Poisson brms model
+## first proposed model
+model1 <- brm(number_of_commits_oldest ~ after_entropy.entropy * oldest_entropy.entropy +
+                 (1 | projectName) +
+                 (1 | bugType) +
+                 (1 + same_before_after | author_after),
+               data = data,
+               chains = 4,
+               cores = 2,
+               family = negbinomial,
+               warmup = 400,
+               iter = 2000,
+               thin = 10)
