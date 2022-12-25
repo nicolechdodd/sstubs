@@ -52,6 +52,9 @@ sd(data$number_of_commits_oldest)
 # in this case, mean does not equal variance, meaning we should use neg binomial
 # distribution instead of Poisson due to overdispersion 
 
+twoFix <- data %>% 
+  filter(number_of_commits_oldest <= 2 )
+
 
 
 #### Modeling ##################################################################
