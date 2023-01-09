@@ -1,10 +1,11 @@
 library(tidyverse)
 library(brms)
-library(lme4)
 
 #### Filter down data for modeling ############################################
 ## load data
-merged_df <- read.csv("data/AnjiniV_ThesisFiles_truncated_df.csv")
+## NOTE: have to unlock data, not just save-as to another CSV, cause there's
+## some weird corruption thing happening
+merged_df <- read.csv("data/Anjini-data-unlocked.csv")
 
 ## cleaning
 # convert to tibble
@@ -12,7 +13,7 @@ merged_df <- as_tibble(merged_df)
 
 # clean up columns and filter data
 merged_df <- merged_df %>% 
-  select(-c(`X.1`:`X`)) %>% 
+  select(-`X`) %>% 
   filter(number_of_commits_oldest > 0)
 
 # get rid of unwanted columns
