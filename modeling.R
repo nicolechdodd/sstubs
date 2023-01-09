@@ -4,34 +4,35 @@ library(lme4)
 
 #### Filter down data for modeling ############################################
 ## load data
-# merged_df <- read.csv("data/AnjiniV_ThesisFiles_truncated_df.csv")
+merged_df <- read.csv("data/AnjiniV_ThesisFiles_truncated_df.csv")
 
 ## cleaning
 # convert to tibble
-# merged_df <- as_tibble(merged_df)
+merged_df <- as_tibble(merged_df)
 
 # clean up columns and filter data
-# merged_df <- merged_df %>% 
-#   select(-c(`X.1`:`X`)) %>% 
-#   filter(number_of_commits_oldest > 0)
+merged_df <- merged_df %>% 
+  select(-c(`X.1`:`X`)) %>% 
+  filter(number_of_commits_oldest > 0)
 
 # get rid of unwanted columns
-# merged_df <- merged_df %>% 
-#   select(bugType, projectName, bugNodeLength, fixNodeLength, author_before:author_after, author_oldest_commit:oldest_entropy.entropy)
+merged_df <- merged_df %>% 
+  select(bugType, bugFilePath, projectName, bugNodeLength, fixNodeLength, 
+         author_before:author_after, author_oldest_commit:oldest_entropy.entropy)
 
 
 # create column for same or different fixing author
-# merged_df <- merged_df %>% 
-#   mutate(same_before_after = rep(0))
+merged_df <- merged_df %>% 
+  mutate(same_before_after = rep(0))
 
-# merged_df$same_before_after[merged_df$author_before == merged_df$author_after] <- 1
+merged_df$same_before_after[merged_df$author_before == merged_df$author_after] <- 1
 
 # reorganize to get author columns next to each other
-# merged_df <- merged_df %>% 
-#   select(bugType:author_after, same_before_after, author_date_commit_before:oldest_entropy.entropy)
+merged_df <- merged_df %>% 
+  select(bugType:author_after, same_before_after, author_oldest_commit:oldest_entropy.entropy)
 
 # write to new file
-# write.csv(merged_df, "data/data-cleaned.csv")
+write.csv(merged_df, "data/data-cleaned.csv")
 
 
 #### Load cleaned data #########################################################
